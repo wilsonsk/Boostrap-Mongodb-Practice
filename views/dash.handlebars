@@ -1,0 +1,38 @@
+<div id="wrapper">
+	<!-- Sidebar -->
+	<div id="sidebar-wrapper">
+		<ul class="sidebar-nav">
+			<li><a href="#">Account</a></li>
+			<li><a href="#">SettingsSettingsSettingsSettingsSettingsSettingsSettingsSettingsSettingsSettingsSettingsSettingsSettingsSettingsSettingsSettings</a></li>
+			<li><a href="#">Logout</a></li>
+		</ul>
+	</div>
+
+	<!-- main content -->
+	<div id="page-content-wrapper">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-lg-6">
+					<a href="#" class="btn btn-success" id="sidebar-toggle">Toggle Sidebar</a>
+					<h1>This is am Admin dashboard</h1>
+					<p>The main page-content-wrapper is contained within the green border</p>
+					<p>The main page-content-wrapper has absolute positioning starting at top left hand corner</p>
+					<p>The main sidebar-wrapper is contained within the red border</p>
+					<p>The main sidebar-wrapper has absolute positioning starting at top left hand corner</p>
+					<p>When the sidebar toggle button is pressed, a jquery function changes the css styling of all within the main wrapper as the css class is toggled</p>
+					<p>Therefore, the sidebar width goes from 0 to 250px and the page-content's padding-left increases to 250px to componsate</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<!-- menu toggle jquery script -->
+<script>
+	$("#sidebar-toggle").click(function(btnClk){
+		btnClk.preventDefault();	
+		<!-- all stuff within #wrapper is modified -->
+		$("#wrapper").toggleClass("sidebarDisplayed");
+	});
+</script>

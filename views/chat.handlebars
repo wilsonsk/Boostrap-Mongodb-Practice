@@ -1,0 +1,69 @@
+<div class="jumbotron container-fluid">
+	<div class=chat-body">
+		<div class="col-md-4"></div>
+		<div class="col-md-4">
+			<p><input type="text" class="chat-name" placeholder="Enter your name"></p>
+			<p><div class="chat-messages">
+	</div></p>
+	<p><textarea class="chat-textarea" placeholder="Type your message"></textarea></p>
+	<p><div class="chat-status">Status: <span>Idle</span></div></p>
+</div>	
+<script src="/socket.io/socket.io.js"></script>
+<script>
+	//var socket = io();
+	(function(){
+		//select a node from DOM
+		//document.querySelector() returns the FIRST ELEMENT within the document that matches the specified group of selectors or classes : using depth-first traversal of the document's nodes
+		var getNode = function(selector){
+			return document.querySelector(selector);
+		}
+
+		//Get required nodes
+		textarea = getNode('.chat-textarea');
+		chatName = getNode('.chat-name');
+
+		try{
+			var socket = io();
+		}catch(err){
+			if(err){ console.log('error socket not connected to server'); }
+		}
+		
+		if(socket !== undefined){
+			console.log('ok!');
+
+			//listen for keydown (enter key)
+			textarea.addEventListener('keydown', function(event){
+				var self = this;	//refers to actual textarea being listened on, aka 'this' object
+				var name = chatName.value;
+			
+				//log which key (via numerical equivalent) was 'evented', in this case keydown
+				console.log(self);
+				console.log(event.which);
+				console.log(event);
+
+				//check for missing fields (name or message)
+				/*
+				var whiteSpacePattern = /^\s*$/;
+		
+				if(whiteSpacePattern.test(chatName.value) || whiteSpacePattern.test(self.value)){
+					alert('Must Enter Name and Message');
+				}else{	*/
+				//UPDATE: DO NOT CHECK USER INPUTS ON CLIENT SIDE OR ELSE CLIENT COULD MODIFY WHITESPACE PATTERN ON SOURCE CODE AND THEN SEND INVALID DATA TO SERVER
+					
+				//check for event.which == 13 aka enter key && check if shiftkey was HELD DOWN
+				//if shift key held down with enter button keydown, then creates new line on message field node
+				if(event.which === 13 && event.shiftKey === false){
+					console.log('send');	
+					socket.emit('input', {
+						name: name,
+						message: self.value	
+					});
+					event.preventDefault();
+				}
+				
+			});
+		}
+	})();
+</script>
+
+{{{alert}}}

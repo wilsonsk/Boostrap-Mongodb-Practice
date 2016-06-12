@@ -1,0 +1,22 @@
+{
+  "name": "realEstate",
+  "version": "0.0.0",
+  "description": "Practicing boostrap and jquery with node js",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "~1.15.1",
+    "express": "~4.13.4",
+    "express-handlebars": "~3.0.0",
+    "express-session": "~1.13.0",
+    "mongodb": "~2.1.18",
+    "socket.io": "~1.4.6",
+    "http": "0.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Skyler Wilson",
+  "license": "BSD-2-Clause"
+}

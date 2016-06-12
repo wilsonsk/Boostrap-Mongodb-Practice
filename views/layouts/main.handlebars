@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <title>{{something}}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" 
+	integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="/css/sidebar.css">
+	<link rel="stylesheet" href="/css/chat.css">
+</head>
+<body>
+<nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+                <!-- Logo -->
+
+                <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#mainNavBar">
+                                <!-- "hamburger" collapse icon manually created via spans -->
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                        </button>
+                        <a href="/" class="navbar-brand">Antoku Real Estate Brokers</a>
+                </div>
+
+                <!-- Menu Items -->
+                <!-- Collapsable Menu -->
+                <div class="collapse navbar-collapse" id="mainNavBar">
+                        <ul class="nav navbar-nav">
+                                <li class="active"><a href="/chat">Chat</a></li>
+                                <li><a href="/dashboard">Dashboard</a></li>
+
+                                <!-- Drop down menu -->
+
+                                <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Kira's Profile <span class="caret"></span></a>
+                                        <ul class="dropdown-menu">
+                                                <li><a href="#">Sales</a></li>
+                                        </ul>
+                                </li>
+                        </ul>
+
+                        <!-- right align -->
+
+                        <ul class="nav navbar-nav navbar-right">
+                                <li><a href="#">Logout</a></li>
+                        </ul>
+
+                </div>
+
+
+        </div>
+</nav>
+{{{body}}}
+</body>
+</html>
