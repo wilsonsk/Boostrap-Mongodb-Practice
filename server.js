@@ -3,6 +3,7 @@
 //
 //
 
+var chatLogin = require('./chatLoginPassword.js');
 var express = require('express');
 var session = require('express-session');
 //var mysql = require('./dbContentPool.js');
@@ -33,13 +34,34 @@ app.get('/', function(req, res, next){
 app.get('/dashboard', function(req, res, next){
 	var context = {};
 	context = 'Bootstrap Dashboard';
-	res.render('dash', {something: context});
+	var stylesheet = '<link rel="stylesheet" href="/css/sidebar.css">';
+	res.render('dash', {something: context, style : stylesheet});
+});
+
+app.get('/chat/login', function(req, res, next){
+	var context = {};
+	context = 'Chat Login';
+	var stylesheet = '<link rel="stylesheet" href="/css/cover.css">';
+	res.render('loginToChat', {something: context, style : stylesheet});
+});
+
+app.post('/chat/login', function(req, res, next){
+	if(req.body.chat_password == ""){
+		var context = "<script>alert('Must Enter a Password');</script>";
+		res.render('loginToChat', {alert : context});
+	}else if(req.body.chat_password != chatLogin.password){
+		var context = "<script>alert('Invalid Password');</script>";
+		res.render('loginToChat', {alert : context});
+	}else if(req.body.chat_password == chatLogin.password){
+		res.redirect('/chat');
+	}
 });
 
 app.get('/chat', function(req, res, next){
 	var context = {};
 	context = 'Chat';
-	res.render('chat', {something : context});	
+	var stylesheet = '<link rel="stylesheet" href="/css/chat.css">';
+	res.render('chat', {something : context, style : stylesheet});	
 });
 
 app.use(function(req, res){
