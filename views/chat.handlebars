@@ -1,5 +1,5 @@
 <div class="jumbotron container-fluid">
-	<div class=chat-body">
+	<div class="chat-body">
 		<div class="col-md-4"></div>
 		<div class="col-md-4">
 			<p><input type="text" class="chat-name" placeholder="Enter your name"></p>
@@ -19,8 +19,29 @@
 		}
 
 		//Get required nodes
-		textarea = getNode('.chat-textarea');
-		chatName = getNode('.chat-name');
+		var chatMessages = getNode('.chat-messages');
+		var textarea = getNode('.chat-textarea');
+		var chatName = getNode('.chat-name');
+		//node of .chat-status then get span within that node
+		var status = getNode('.chat-status span');
+
+		//node.textContent returns the text content of a node and its decendents
+		//statusDefault === 'idle' 
+		var statusDefault = status.textContent;			
+		
+		//set status function: changes status on client
+		var setStatus = function(str){
+			status.textContent = str;
+	
+			//reset status.textContent to 'idle' after given time of 3000 ms
+			if(str !== statusDefault){
+				var delay = setTimeout(function(){
+					setStatus(statusDefault);
+					//clearInterval(): clears a timer set with setInterval()
+					clearInterval(delay);
+				}, 3000);
+			}
+		};
 
 		try{
 			var socket = io();
@@ -31,6 +52,43 @@
 		if(socket !== undefined){
 			console.log('ok!');
 
+			//listen for 'output' from new user
+			//new users get emitted the whole sorted array of db objects while previous clients are not re-emitted that data when first entering the site
+			//when a user sends a NEW message, all clients are emitted the message
+			socket.on('output', function(data){
+				//data is an sorted array of db objects
+				console.log(data);
+				if(data.length){
+					//loop through results
+					for(var i = 0; i < data.length; i = i + 1){
+						var message = document.createElement('div');
+						//set class of message to .chat-message
+						message.setAttribute('class', '.chat-message');
+						message.textContent = data[i].name + ': ' + data[i].message;
+
+						//append message to chat-messages Node aka chatMessages div which encapsulates all nodes
+						chatMessages.appendChild(message);
+						//insert new message before last message: sort in reverse order: 
+							//most recent message is at the top do to the last->first sorting of the db content array within the server
+						chatMessages.insertBefore(message, chatMessages.firstChild);
+					}
+				}
+			});
+			
+			//listen for status from server	
+			socket.on('status', function(data){
+				//check type of data returned: if typeof data === object then extract 'message' attribute otherwise just pass in data string
+				//typeof data === object WHEN socket.io 'input'handler function within the server validates the input: object contains {"message", "clear"}
+				//typeof data !== object (and is therefore a string) WHEN the socket.io 'input' handler function within the server  INvalidates the input: input is a "string"
+				setStatus((typeof data === 'object') ? data.message : data);
+	
+				//data.clear is an attribute that is set within the server in the socket handler for 'input'
+				//check if data.clear attribute is true, if so then the client's message was sent therefore clear the message box
+				if(data.clear === true){
+					textarea.value = '';
+				}
+			});
+		
 			//listen for keydown (enter key)
 			textarea.addEventListener('keydown', function(event){
 				var self = this;	//refers to actual textarea being listened on, aka 'this' object

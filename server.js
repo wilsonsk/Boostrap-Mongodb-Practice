@@ -55,6 +55,7 @@ app.use(function(err, req, res, next){
 });
 
 var mongo = require('mongodb').MongoClient;
+//io === client
 var io = require('socket.io').listen(server);
 mongo.connect('mongodb://127.0.0.1/chat', function(err, db){
         if(err){ throw err; }
@@ -64,6 +65,18 @@ mongo.connect('mongodb://127.0.0.1/chat', function(err, db){
 		var sendStatus = function(str){
 			socket.emit('status', str)
 		};
+
+		//emit all messages
+		//when client connects, retrieve all messages within chat db with limit of 100
+		//send db content to socket
+		//socket listens to any input - emits to all 
+		//.find() is a mongodb method
+		//sort by id, last->first to be ordered in client js stored in 'res' which is an array of db objects
+		col.find().limit(100).sort({_id: 1}).toArray(function(err, res){
+			if(err) { throw err; }
+			//to prevent all clients from getting re emitted data when a new user connects: emit only db content to the new user
+			socket.emit('output', res);
+		});
 
 		//handle any emit input for input 
                 socket.on('input', function(data){
@@ -78,6 +91,10 @@ mongo.connect('mongodb://127.0.0.1/chat', function(err, db){
 			}else{
 				col.insert({name: name, message:message}, function(){
 					console.log('inserted');
+					//When a client enters new data, emit the NEW message to ALL clients: send data within an array back to the clients, a single object
+					io.emit('output', [data]);
+
+					sendStatus({message: "Message Sent", clear: true});
 				});
 				
 			}
