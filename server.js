@@ -29,7 +29,8 @@ var server = app.listen(app.get('port'), function(){
 app.get('/', function(req, res, next){
 	var context = {};
 	context = 'Bootstrap Practice';
-	res.render('home', {something: context});
+	var fixedNav = true;
+	res.render('home', {something: context, fixed: fixedNav});
 });
 
 app.get('/dashboard', function(req, res, next){
@@ -53,7 +54,6 @@ app.post('/chat/login', function(req, res, next){
 		res.render('loginToChat', {alert : context, style : stylesheet});
 	}else{
 		req.session.chat_name = req.body.chat_name;
-		var sessionName = req.session.chat_name;
 		if(req.body.chat_password == ""){
 			var context = "<script>alert('Must Enter a Password');</script>";
 			res.render('loginToChat', {alert : context, style : stylesheet});
@@ -61,20 +61,20 @@ app.post('/chat/login', function(req, res, next){
 			var context = "<script>alert('Invalid Password');</script>";
 			res.render('loginToChat', {alert : context, style : stylesheet});
 		}else if(req.body.chat_password == chatLogin.password){
-			//res.redirect('/chat');
-			var context = {};
-			context = 'Chat';
-			var stylesheet = '<link rel="stylesheet" href="/css/chat.css">';
-			res.render('chat', {something : context, style : stylesheet, session_name : sessionName});	
+			res.redirect('/chat');
 		}
 	}
 });
 
 app.get('/chat', function(req, res, next){
-	var context = {};
-	context = 'Chat';
-	var stylesheet = '<link rel="stylesheet" href="/css/chat.css">';
-	res.render('chat', {something : context, style : stylesheet});	
+	if(!req.session.chat_name){
+		res.redirect('/chat/login');
+	}else{
+		var context = {};
+		context = 'Chat';
+		var stylesheet = '<link rel="stylesheet" href="/css/chat.css">';
+		res.render('chat', {something : context, style : stylesheet, session_name : req.session.chat_name});	
+	}
 });
 
 app.use(function(req, res){
@@ -92,10 +92,11 @@ app.use(function(err, req, res, next){
 var mongo = require('mongodb').MongoClient;
 //io === client
 var io = require('socket.io').listen(server);
-mongo.connect('mongodb://127.0.0.1/chat', function(err, db){
+mongo.connect('mongodb://127.0.0.1/chat', function(err, db, req){
         if(err){ throw err; }
         io.on('connection', function(socket){
                 console.log("a user connected");
+                //console.log(req.session.chat_name + " connected");
 		var col = db.collection('messages');
 		var sendStatus = function(str){
 			socket.emit('status', str)
@@ -118,13 +119,14 @@ mongo.connect('mongodb://127.0.0.1/chat', function(err, db){
                         console.log(data);
 			var name = data.name;
 			var message = data.message;
+			var date = data.date;
 			var whiteSpacePattern = /^\s*$/;
 		
 			if(whiteSpacePattern.test(name) || whiteSpacePattern.test(message)){
 				console.log('Invalid');
 				sendStatus('Must Enter a Name and a Message');
 			}else{
-				col.insert({name: name, message:message}, function(){
+				col.insert({name: name, message: message, date: date}, function(){
 					console.log('inserted');
 					//When a client enters new data, emit the NEW message to ALL clients: send data within an array back to the clients, a single object
 					io.emit('output', [data]);

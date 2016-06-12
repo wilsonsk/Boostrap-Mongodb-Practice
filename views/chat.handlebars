@@ -1,15 +1,13 @@
 <div class="jumbotron container-fluid">
-	<a href="#">Messages <span class="badge" id="numMessages"></span></a>
+	<a href="#" class="col-md-4">Messages <span class="badge" id="numMessages"></span></a>
 	<p></p>
 	<div class="chat-body">
 		<div class="col-md-4"></div>
-		<div class="col-md-4">
-			<!-- <p><input type="text" class="chat-name" placeholder="Enter your name"></p> -->
-			<p><div class="chat-name" value="{{session_name}}">{{session_name}}</div></p>
-			<p><div class="chat-messages">
-	</div></p>
+		<p><input type="text" disabled="disabled" class="chat-name" value="{{session_name}}">{{session_name}}</p>
+		<p><div class="chat-messages"></div></p>
 	<p><textarea class="chat-textarea" placeholder="Type your message"></textarea></p>
 	<p><div class="chat-status">Status: <span>Idle</span></div></p>
+	</div>
 </div>	
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -25,6 +23,7 @@
 		var chatMessages = getNode('.chat-messages');
 		var textarea = getNode('.chat-textarea');
 		var chatName = getNode('.chat-name');
+		console.log('chat name: ' + chatName.value);
 		//node of .chat-status then get span within that node
 		var status = getNode('.chat-status span');
 		var numMessages = getNode('#numMessages');
@@ -68,7 +67,7 @@
 						var message = document.createElement('div');
 						//set class of message to .chat-message
 						message.setAttribute('class', '.chat-message');
-						message.textContent = data[i].name + ': ' + data[i].message;
+						message.textContent = data[i].date + ': ' + data[i].name + ': ' + data[i].message;
 
 						//append message to chat-messages Node aka chatMessages div which encapsulates all nodes
 						chatMessages.appendChild(message);
@@ -112,14 +111,19 @@
 					alert('Must Enter Name and Message');
 				}else{	*/
 				//UPDATE: DO NOT CHECK USER INPUTS ON CLIENT SIDE OR ELSE CLIENT COULD MODIFY WHITESPACE PATTERN ON SOURCE CODE AND THEN SEND INVALID DATA TO SERVER
-					
+				
+				//Build Date/Time string
+				var date = new Date();
+				date = date.toDateString() + ' ' + date.toTimeString();
+		
 				//check for event.which == 13 aka enter key && check if shiftkey was HELD DOWN
 				//if shift key held down with enter button keydown, then creates new line on message field node
 				if(event.which === 13 && event.shiftKey === false){
 					console.log('send');	
 					socket.emit('input', {
 						name: name,
-						message: self.value	
+						message: self.value,	
+						date: date
 					});
 					event.preventDefault();
 				}

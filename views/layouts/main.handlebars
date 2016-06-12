@@ -9,12 +9,14 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 	
-		{{{style}}}
-	<!--<link rel="stylesheet" href="/css/sidebar.css">
-	<link rel="stylesheet" href="/css/chat.css"> -->
+	{{{style}}}
 </head>
 <body>
+{{#if fixed}}
+<nav class="navbar navbar-inverse navbar-fixed-top">
+{{else}}
 <nav class="navbar navbar-inverse <!-- navbar-fixed-top-->">
+{{/if}}
         <div class="container-fluid">
                 <!-- Logo -->
 
@@ -32,7 +34,7 @@
                 <!-- Collapsable Menu -->
                 <div class="collapse navbar-collapse" id="mainNavBar">
                         <ul class="nav navbar-nav">
-                                <li class="active"><a href="/chat/login">Chat</a></li>
+                                <li class="active"><a href="/chat">Chat</a></li>
                                 <li><a href="/dashboard">Dashboard</a></li>
 
                                 <!-- Drop down menu -->
