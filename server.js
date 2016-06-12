@@ -10,6 +10,7 @@ var session = require('express-session');
 var bodyParser = require('body-parser');
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
+app.use(session({secret: 'OSUeecs'}));
 
 //Load css or any js (/public)
 app.use(express.static(__dirname + '/public'));
@@ -46,14 +47,26 @@ app.get('/chat/login', function(req, res, next){
 });
 
 app.post('/chat/login', function(req, res, next){
-	if(req.body.chat_password == ""){
-		var context = "<script>alert('Must Enter a Password');</script>";
-		res.render('loginToChat', {alert : context});
-	}else if(req.body.chat_password != chatLogin.password){
-		var context = "<script>alert('Invalid Password');</script>";
-		res.render('loginToChat', {alert : context});
-	}else if(req.body.chat_password == chatLogin.password){
-		res.redirect('/chat');
+	var stylesheet = '<link rel="stylesheet" href="/css/cover.css">';
+	if(req.body.chat_name == ""){
+		var context = "<script>alert('Must Enter a User Name');</script>";
+		res.render('loginToChat', {alert : context, style : stylesheet});
+	}else{
+		req.session.chat_name = req.body.chat_name;
+		var sessionName = req.session.chat_name;
+		if(req.body.chat_password == ""){
+			var context = "<script>alert('Must Enter a Password');</script>";
+			res.render('loginToChat', {alert : context, style : stylesheet});
+		}else if(req.body.chat_password != chatLogin.password){
+			var context = "<script>alert('Invalid Password');</script>";
+			res.render('loginToChat', {alert : context, style : stylesheet});
+		}else if(req.body.chat_password == chatLogin.password){
+			//res.redirect('/chat');
+			var context = {};
+			context = 'Chat';
+			var stylesheet = '<link rel="stylesheet" href="/css/chat.css">';
+			res.render('chat', {something : context, style : stylesheet, session_name : sessionName});	
+		}
 	}
 });
 
