@@ -1,9 +1,9 @@
 <div class="jumbotron container-fluid">
-	<a href="#" class="col-md-4">Messages <span class="badge" id="numMessages"></span></a>
+	<a href="#">Messages <span class="badge" id="numMessages"></span></a>
 	<p></p>
 	<div class="chat-body">
 		<div class="col-md-4"></div>
-		<p><input type="text" disabled="disabled" class="chat-name" value="{{session_name}}">{{session_name}}</p>
+		<p><input type="text" disabled="disabled" class="chat-name" value="{{session_name}}"></p>
 		<p><div class="chat-messages"></div></p>
 	<p><textarea class="chat-textarea" placeholder="Type your message"></textarea></p>
 	<p><div class="chat-status">Status: <span>Idle</span></div></p>
@@ -68,7 +68,11 @@
 						//set class of message to .chat-message
 						message.setAttribute('class', '.chat-message');
 						message.textContent = data[i].date + ': ' + data[i].name + ': ' + data[i].message;
-
+						if("{{session_name}}" === data[i].name){
+							message.setAttribute("style", "background: lightblue");
+						}else{
+							message.setAttribute("style", "background: lightcoral");
+						}
 						//append message to chat-messages Node aka chatMessages div which encapsulates all nodes
 						chatMessages.appendChild(message);
 						//insert new message before last message: sort in reverse order: 

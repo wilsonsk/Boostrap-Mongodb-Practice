@@ -30,21 +30,22 @@ app.get('/', function(req, res, next){
 	var context = {};
 	context = 'Bootstrap Practice';
 	var fixedNav = true;
-	res.render('home', {something: context, fixed: fixedNav});
+	res.render('home', {something : context, fixed : fixedNav});
 });
 
 app.get('/dashboard', function(req, res, next){
 	var context = {};
 	context = 'Bootstrap Dashboard';
 	var stylesheet = '<link rel="stylesheet" href="/css/sidebar.css">';
-	res.render('dash', {something: context, style : stylesheet});
+	var fixedNav = true;
+	res.render('dash', {something : context, style : stylesheet, fixed : fixedNav});
 });
 
 app.get('/chat/login', function(req, res, next){
 	var context = {};
 	context = 'Chat Login';
 	var stylesheet = '<link rel="stylesheet" href="/css/cover.css">';
-	res.render('loginToChat', {something: context, style : stylesheet});
+	res.render('loginToChat', {something : context, style : stylesheet});
 });
 
 app.post('/chat/login', function(req, res, next){
@@ -66,6 +67,10 @@ app.post('/chat/login', function(req, res, next){
 	}
 });
 
+app.post('/chat/createAccount', function(req, res, next){
+	
+});
+
 app.get('/chat', function(req, res, next){
 	if(!req.session.chat_name){
 		res.redirect('/chat/login');
@@ -73,7 +78,8 @@ app.get('/chat', function(req, res, next){
 		var context = {};
 		context = 'Chat';
 		var stylesheet = '<link rel="stylesheet" href="/css/chat.css">';
-		res.render('chat', {something : context, style : stylesheet, session_name : req.session.chat_name});	
+		var fixedNav = true;
+		res.render('chat', {something : context, style : stylesheet, session_name : req.session.chat_name, fixed : fixedNav});	
 	}
 });
 
@@ -92,11 +98,15 @@ app.use(function(err, req, res, next){
 var mongo = require('mongodb').MongoClient;
 //io === client
 var io = require('socket.io').listen(server);
-mongo.connect('mongodb://127.0.0.1/chat', function(err, db, req){
+
+//connects to chat db if exists, else create dbs called chat
+mongo.connect('mongodb://127.0.0.1/chat', function(err, db){
         if(err){ throw err; }
         io.on('connection', function(socket){
                 console.log("a user connected");
                 //console.log(req.session.chat_name + " connected");
+		
+		//create collection called messages within dbs called chat
 		var col = db.collection('messages');
 		var sendStatus = function(str){
 			socket.emit('status', str)
