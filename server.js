@@ -53,28 +53,46 @@ app.get('/chat/login', function(req, res, next){
 });
 
 app.post('/chat/login', function(req, res, next){
-	var stylesheet = '<link rel="stylesheet" href="/css/cover.css">';
-	if(req.body.chat_name == ""){
-		var context = "<script>alert('Must Enter a User Name');</script>";
-		res.render('loginToChat', {alert : context, style : stylesheet});
-	}else{
-		req.session.chat_name = req.body.chat_name;
-		if(req.body.chat_password == ""){
-			var context = "<script>alert('Must Enter a Password');</script>";
+	mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
+		if(err){ throw err; }
+		//get collection called users within accounts dbs
+		var col = db.collection('users');
+		var stylesheet = '<link rel="stylesheet" href="/css/cover.css">';
+		if(req.body.chat_name == ""){
+			var context = "<script>alert('Must Enter a User Name');</script>";
 			res.render('loginToChat', {alert : context, style : stylesheet});
-		}else if(req.body.chat_password != chatLogin.password){
-			var context = "<script>alert('Invalid Password');</script>";
+		}else if(col.find({user_name: {$ne: "req.body.chat_name"}})){
+			var falseName = req.body.chat_name;
+			var context = "<script>alert('This User Name Does Not Exist');</script>";
 			res.render('loginToChat', {alert : context, style : stylesheet});
-		}else if(req.body.chat_password == chatLogin.password){
-			res.redirect('/chat');
-		}
+		}/*else{
+			req.session.account = req.body.chat_name;
+			if(req.body.chat_password == ""){
+				var context = "<script>alert('Must Enter a Password');</script>";
+				res.render('loginToChat', {alert : context, style : stylesheet});
+			}else if(req.body.chat_password != chatLogin.password){
+				var context = "<script>alert('Invalid Password');</script>";
+				res.render('loginToChat', {alert : context, style : stylesheet});
+			}else if(req.body.chat_password == chatLogin.password){
+				res.redirect('/chat');
+			}
 		//check if user name is in db; check if user name password matches db password
-	}
+		}*/
+	});
 });
 
 app.post('/chat/createAccount', function(req, res, next){
 	mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 		var col = db.collection('users');
+		col.findOne({user_name:req.body.account_name}, function(err, doc){
+			if(doc){
+				console.log('found');
+			}else{
+				console.log('cant find');
+			}
+		});
+
+	/*
 		if(err){ throw err; }
 		var stylesheet = '<link rel="stylesheet" href="/css/cover.css">';
 		if(req.body.account_name == ""){
@@ -84,7 +102,8 @@ app.post('/chat/createAccount', function(req, res, next){
 			var context = "<script>alert('User Name Must Have At Least 8 Character');</script>";
 			res.render('loginToChat', {alert : context, style : stylesheet});
 			//test if user name is already in db
-		}else if(col.find({user_name: req.body.account_name})){
+		}else if(1){
+			console.log(col.find({user_name: "NewAccount"}).count() > 0);
 			var context = "<script>alert('User Name is Already in Use');</script>";
 			res.render('loginToChat', {alert : context, style : stylesheet});
 		}else{
@@ -114,6 +133,7 @@ app.post('/chat/createAccount', function(req, res, next){
 				res.redirect('/chat');
 			}
 		}
+	*/
 	});	
 });
 
