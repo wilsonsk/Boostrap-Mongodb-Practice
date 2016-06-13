@@ -26,6 +26,10 @@ var server = app.listen(app.get('port'), function(){
 });
 /* Socket.io chat Practice  */
 
+var mongo = require('mongodb').MongoClient;
+//io === client
+var io = require('socket.io').listen(server);
+
 app.get('/', function(req, res, next){
 	var context = {};
 	context = 'Bootstrap Practice';
@@ -64,22 +68,63 @@ app.post('/chat/login', function(req, res, next){
 		}else if(req.body.chat_password == chatLogin.password){
 			res.redirect('/chat');
 		}
+		//check if user name is in db; check if user name password matches db password
 	}
 });
 
 app.post('/chat/createAccount', function(req, res, next){
-	
+	mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
+		var col = db.collection('users');
+		if(err){ throw err; }
+		var stylesheet = '<link rel="stylesheet" href="/css/cover.css">';
+		if(req.body.account_name == ""){
+			var context = "<script>alert('Must Enter a User Name');</script>";
+			res.render('loginToChat', {alert : context, style : stylesheet});
+		}else if(req.body.account_name.length < 8){
+			var context = "<script>alert('User Name Must Have At Least 8 Character');</script>";
+			res.render('loginToChat', {alert : context, style : stylesheet});
+			//test if user name is already in db
+		}else if(col.find({user_name: req.body.account_name})){
+			var context = "<script>alert('User Name is Already in Use');</script>";
+			res.render('loginToChat', {alert : context, style : stylesheet});
+		}else{
+			if(req.body.account_password == ""){
+				var context = "<script>alert('Must Enter a Password');</script>";
+				res.render('loginToChat', {alert : context, style : stylesheet});
+			}else if(req.body.account_password_confirm == ""){
+				var context = "<script>alert('Must Confirm Password');</script>";
+				res.render('loginToChat', {alert : context, style : stylesheet});
+			}else if(req.body.account_password != req.body.account_password_confirm){
+				var context = "<script>alert('Passwords Do Not Match');</script>";
+				res.render('loginToChat', {alert : context, style : stylesheet});
+			}else if(req.body.account_password.length < 8){
+				var context = "<script>alert('Password Must Contain At Least 8 Characters');</script>";
+				res.render('loginToChat', {alert : context, style : stylesheet});
+			}else if(req.body.account_password == req.body.account_password_confirm){
+				//store account name and account password in mongodb called users
+				req.session.account_name = req.body.account_name;
+				req.session.account_password = req.body.account_password;
+				var user = {};
+				user.name = req.session.account_name;
+				col.insert({user_name: req.session.account_name, user_password: req.session.account_password});
+				console.log('created new user');
+				io.on('connection', function(socket){
+					io.emit('userEntered', user.name);
+				});
+				res.redirect('/chat');
+			}
+		}
+	});	
 });
 
 app.get('/chat', function(req, res, next){
-	if(!req.session.chat_name){
+	if(!req.session.chat_name && !req.session.account_name){
 		res.redirect('/chat/login');
 	}else{
 		var context = {};
 		context = 'Chat';
 		var stylesheet = '<link rel="stylesheet" href="/css/chat.css">';
-		var fixedNav = true;
-		res.render('chat', {something : context, style : stylesheet, session_name : req.session.chat_name, fixed : fixedNav});	
+		res.render('chat', {something : context, style : stylesheet, session_name : req.session.account_name || req.session.chat_name});	
 	}
 });
 
@@ -95,13 +140,10 @@ app.use(function(err, req, res, next){
 	res.render('500');
 });
 
-var mongo = require('mongodb').MongoClient;
-//io === client
-var io = require('socket.io').listen(server);
-
 //connects to chat db if exists, else create dbs called chat
 mongo.connect('mongodb://127.0.0.1/chat', function(err, db){
         if(err){ throw err; }
+	//io.on('connection') connects to var socket = io() within client script
         io.on('connection', function(socket){
                 console.log("a user connected");
                 //console.log(req.session.chat_name + " connected");

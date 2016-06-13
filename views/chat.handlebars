@@ -54,7 +54,11 @@
 		
 		if(socket !== undefined){
 			console.log('ok!');
-
+			//Display new user name
+			socket.on('userEntered', function(user){
+				console.log('user: ' + user + ' entered');
+			});
+			
 			//listen for 'output' from new user
 			//new users get emitted the whole sorted array of db objects while previous clients are not re-emitted that data when first entering the site
 			//when a user sends a NEW message, all clients are emitted the message
