@@ -58,26 +58,37 @@ app.post('/chat/login', function(req, res, next){
 		//get collection called users within accounts dbs
 		var col = db.collection('users');
 		var stylesheet = '<link rel="stylesheet" href="/css/cover.css">';
-		if(req.body.chat_name == ""){
+		if(req.body.login_name == ""){
 			var context = "<script>alert('Must Enter a User Name');</script>";
 			res.render('loginToChat', {alert : context, style : stylesheet});
-		}else if(col.find({user_name: {$ne: "req.body.chat_name"}})){
-			var falseName = req.body.chat_name;
-			var context = "<script>alert('This User Name Does Not Exist');</script>";
-			res.render('loginToChat', {alert : context, style : stylesheet});
-		}/*else{
-			req.session.account = req.body.chat_name;
-			if(req.body.chat_password == ""){
+		}else{
+			if(req.body.login_password == ""){
 				var context = "<script>alert('Must Enter a Password');</script>";
 				res.render('loginToChat', {alert : context, style : stylesheet});
-			}else if(req.body.chat_password != chatLogin.password){
-				var context = "<script>alert('Invalid Password');</script>";
-				res.render('loginToChat', {alert : context, style : stylesheet});
-			}else if(req.body.chat_password == chatLogin.password){
-				res.redirect('/chat');
+			}else{	
+				//check if user name is in db; check if user name password matches db password
+				//check if user_name already exists: if so, then account is valid
+				col.findOne({user_name:req.body.login_name}, function(err, doc){
+					if(err){ throw err; }
+					if(doc){
+						col.findOne({user_name: req.body.login_name, user_password: req.body.login_password}, function(err, doc){
+							if(err){ throw err; }
+							if(doc){
+								req.session.account_name = req.body.login_name;
+								req.session.account_password = req.body.login_password;
+								res.redirect('/chat');
+							}else{
+								var context = "<script>alert('Invalid Password');</script>";
+								res.render('loginToChat', {alert : context, style : stylesheet});
+							}
+						});
+					}else{
+						var context = "<script>alert('Account Does Not Exist');</script>";
+						res.render('loginToChat', {alert : context, style : stylesheet});
+					}
+				});
 			}
-		//check if user name is in db; check if user name password matches db password
-		}*/
+		}
 	});
 });
 
@@ -106,7 +117,7 @@ app.post('/chat/createAccount', function(req, res, next){
 				var context = "<script>alert('Password Must Contain At Least 8 Characters');</script>";
 				res.render('loginToChat', {alert : context, style : stylesheet});
 			}else if(req.body.account_password == req.body.account_password_confirm){
-				//check if account_name already exists
+				//check if account_name already exists, if so then create account is invalis
 				col.findOne({user_name:req.body.account_name}, function(err, doc){
 					if(err){ throw err; }
 					if(doc){
@@ -132,7 +143,7 @@ app.post('/chat/createAccount', function(req, res, next){
 });
 
 app.get('/chat', function(req, res, next){
-	if(!req.session.chat_name && !req.session.account_name){
+	if(!req.session.account_password && !req.session.account_name){
 		res.redirect('/chat/login');
 	}else{
 		var context = {};
