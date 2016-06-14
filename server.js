@@ -84,15 +84,6 @@ app.post('/chat/login', function(req, res, next){
 app.post('/chat/createAccount', function(req, res, next){
 	mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 		var col = db.collection('users');
-		col.findOne({user_name:req.body.account_name}, function(err, doc){
-			if(doc){
-				console.log('found');
-			}else{
-				console.log('cant find');
-			}
-		});
-
-	/*
 		if(err){ throw err; }
 		var stylesheet = '<link rel="stylesheet" href="/css/cover.css">';
 		if(req.body.account_name == ""){
@@ -100,11 +91,6 @@ app.post('/chat/createAccount', function(req, res, next){
 			res.render('loginToChat', {alert : context, style : stylesheet});
 		}else if(req.body.account_name.length < 8){
 			var context = "<script>alert('User Name Must Have At Least 8 Character');</script>";
-			res.render('loginToChat', {alert : context, style : stylesheet});
-			//test if user name is already in db
-		}else if(1){
-			console.log(col.find({user_name: "NewAccount"}).count() > 0);
-			var context = "<script>alert('User Name is Already in Use');</script>";
 			res.render('loginToChat', {alert : context, style : stylesheet});
 		}else{
 			if(req.body.account_password == ""){
@@ -120,20 +106,28 @@ app.post('/chat/createAccount', function(req, res, next){
 				var context = "<script>alert('Password Must Contain At Least 8 Characters');</script>";
 				res.render('loginToChat', {alert : context, style : stylesheet});
 			}else if(req.body.account_password == req.body.account_password_confirm){
-				//store account name and account password in mongodb called users
-				req.session.account_name = req.body.account_name;
-				req.session.account_password = req.body.account_password;
-				var user = {};
-				user.name = req.session.account_name;
-				col.insert({user_name: req.session.account_name, user_password: req.session.account_password});
-				console.log('created new user');
-				io.on('connection', function(socket){
-					io.emit('userEntered', user.name);
+				//check if account_name already exists
+				col.findOne({user_name:req.body.account_name}, function(err, doc){
+					if(err){ throw err; }
+					if(doc){
+						var context = "<script>alert('User Name is Already in Use');</script>";
+						res.render('loginToChat', {alert : context, style : stylesheet});
+					}else{
+						//store account name and account password in mongodb called users
+						req.session.account_name = req.body.account_name;
+						req.session.account_password = req.body.account_password;
+						var user = {};
+						user.name = req.session.account_name;
+						col.insert({user_name: req.session.account_name, user_password: req.session.account_password});
+						console.log('created new user');
+						io.on('connection', function(socket){
+							io.emit('userEntered', user.name);
+						});
+						res.redirect('/chat');
+					}
 				});
-				res.redirect('/chat');
 			}
 		}
-	*/
 	});	
 });
 
