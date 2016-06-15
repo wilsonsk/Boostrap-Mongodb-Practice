@@ -149,7 +149,7 @@ app.get('/chat', function(req, res, next){
 		var context = {};
 		context = 'Chat';
 		var stylesheet = '<link rel="stylesheet" href="/css/chat.css">';
-		res.render('chat', {something : context, style : stylesheet, session_name : req.session.account_name || req.session.chat_name});	
+		res.render('chat', {something : context, style : stylesheet, session_name : req.session.account_name});	
 	}
 });
 
@@ -176,9 +176,6 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
         if(err){ throw err; }
 	//io.on('connection') connects to var socket = io() within client script
         io.on('connection', function(socket){
-		socket.on('initialize', function(data){
-
-		});
                 console.log("a user connected");
                 //console.log(req.session.chat_name + " connected");
 		
@@ -221,7 +218,7 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 							if(err){ throw err; }
 							if(doc){
 								console.log('user has previous messages');
-								col.update({user_name: name}, {$set: {chat_message: message, chat_message_date: date}}, function(){
+								col.update({user_name: name}, {$push: {chat_message: message, chat_message_date: date}}, function(){
 									console.log('inserted');
 									var col2 = db.collection('messages');
 									col2.insert({name: name, message: message, date: date});
@@ -240,7 +237,7 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 								});
 							}else{
 								console.log('no previous messages');
-									col.update({user_name: name}, {$set: { chat_message: message, chat_message_date: date}}, function(){
+									col.update({user_name: name}, {$push: { chat_message: message, chat_message_date: date}}, function(){
 										var col2 = db.collection('messages');
 										col2.insert({name: name, message: message, date: date});
 										col2.findOne({name: name, message: message, date: date}, function(err, doc){
