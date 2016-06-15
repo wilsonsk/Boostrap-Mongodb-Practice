@@ -194,11 +194,11 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 		//socket listens to any input - emits to all 
 		//.find() is a mongodb method
 		//sort by id, last->first to be ordered in client js stored in 'res' which is an array of db objects
-		col.find({chat_message: {$exists: true}}).limit(100).sort({_id: 1}).toArray(function(err, res){
+		var col2 = db.collection('messages');
+		col2.find().limit(100).sort({_id: 1}).toArray(function(err, res){
 			if(err) { throw err; }
 			//to prevent all clients from getting re emitted data when a new user connects: emit only db content to the new user
 			socket.emit('output', res);
-			console.log(res);
 		});
 
 		//handle any emit input for input 
@@ -223,19 +223,35 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 								console.log('user has previous messages');
 								col.update({user_name: name}, {$set: {chat_message: message, chat_message_date: date}}, function(){
 									console.log('inserted');
-									//When a client enters new data, emit the NEW message to ALL clients: send data within an array back to the clients, a single object
-									io.emit('output', [data]);
-				
-									sendStatus({message: "Message Sent", clear: true});
+									var col2 = db.collection('messages');
+									col2.insert({name: name, message: message, date: date});
+									col2.findOne({name: name, message: message, date: date}, function(err, doc){
+										if(err){ throw err; }
+										if(doc){
+											io.emit('output', [doc]);
+											sendStatus({message: "Message Sent", clear: true});
+										//When a client enters new data, emit the NEW message to ALL clients: send data within an array back to the clients, a single object
+										//io.emit('output', [data]);
+										//sendStatus({message: "Message Sent", clear: true});
+										}else{
+											throw err;
+										}	
+									});
 								});
 							}else{
 								console.log('no previous messages');
 									col.update({user_name: name}, {$set: { chat_message: message, chat_message_date: date}}, function(){
-									console.log('inserted');
-									//When a client enters new data, emit the NEW message to ALL clients: send data within an array back to the clients, a single object
-									io.emit('output', [data]);
-				
-									sendStatus({message: "Message Sent", clear: true});
+										var col2 = db.collection('messages');
+										col2.insert({name: name, message: message, date: date});
+										col2.findOne({name: name, message: message, date: date}, function(err, doc){
+											if(err){ throw err; }
+											if(doc){
+												io.emit('output', [doc]);
+												sendStatus({message: "Message Sent", clear: true});
+											}else{
+												throw err;
+											}	
+										});
 									});
 							}
 						});
