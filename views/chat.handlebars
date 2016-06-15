@@ -71,8 +71,8 @@
 						var message = document.createElement('div');
 						//set class of message to .chat-message
 						message.setAttribute('class', '.chat-message');
-						message.textContent = data[i].date + ': ' + data[i].name + ': ' + data[i].message;
-						if("{{session_name}}" === data[i].name){
+						message.textContent = data[i].chat_message_date + ': ' + data[i].user_name + ': ' + data[i].chat_message;
+						if("{{session_name}}" === data[i].user_name){
 							message.setAttribute("style", "background: lightblue");
 						}else{
 							message.setAttribute("style", "background: lightcoral");
@@ -129,9 +129,9 @@
 				if(event.which === 13 && event.shiftKey === false){
 					console.log('send');	
 					socket.emit('input', {
-						name: name,
-						message: self.value,	
-						date: date
+						user_name: name,
+						chat_message: self.value,	
+						chat_message_date: date
 					});
 					event.preventDefault();
 				}

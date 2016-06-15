@@ -153,6 +153,11 @@ app.get('/chat', function(req, res, next){
 	}
 });
 
+app.get('/chat/logout', function(req, res, next){
+	req.session.destroy();
+	res.redirect('/chat');
+});
+
 app.use(function(req, res){
 	res.status(404);
 	res.render('404');
@@ -165,16 +170,20 @@ app.use(function(err, req, res, next){
 	res.render('500');
 });
 
+//Handler for socket.io functions from views/chat, connects to mongodb
 //connects to chat db if exists, else create dbs called chat
-mongo.connect('mongodb://127.0.0.1/chat', function(err, db){
+mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
         if(err){ throw err; }
 	//io.on('connection') connects to var socket = io() within client script
         io.on('connection', function(socket){
+		socket.on('initialize', function(data){
+
+		});
                 console.log("a user connected");
                 //console.log(req.session.chat_name + " connected");
 		
 		//create collection called messages within dbs called chat
-		var col = db.collection('messages');
+		var col = db.collection('users');
 		var sendStatus = function(str){
 			socket.emit('status', str)
 		};
@@ -185,32 +194,55 @@ mongo.connect('mongodb://127.0.0.1/chat', function(err, db){
 		//socket listens to any input - emits to all 
 		//.find() is a mongodb method
 		//sort by id, last->first to be ordered in client js stored in 'res' which is an array of db objects
-		col.find().limit(100).sort({_id: 1}).toArray(function(err, res){
+		col.find({chat_message: {$exists: true}}).limit(100).sort({_id: 1}).toArray(function(err, res){
 			if(err) { throw err; }
 			//to prevent all clients from getting re emitted data when a new user connects: emit only db content to the new user
 			socket.emit('output', res);
+			console.log(res);
 		});
 
 		//handle any emit input for input 
                 socket.on('input', function(data){
-                        console.log(data);
-			var name = data.name;
-			var message = data.message;
-			var date = data.date;
+                        console.log('recieved input');
+			var name = data.user_name;
+			var message = data.chat_message;
+			var date = data.chat_message_date;
 			var whiteSpacePattern = /^\s*$/;
 		
 			if(whiteSpacePattern.test(name) || whiteSpacePattern.test(message)){
 				console.log('Invalid');
 				sendStatus('Must Enter a Name and a Message');
 			}else{
-				col.insert({name: name, message: message, date: date}, function(){
-					console.log('inserted');
-					//When a client enters new data, emit the NEW message to ALL clients: send data within an array back to the clients, a single object
-					io.emit('output', [data]);
-
-					sendStatus({message: "Message Sent", clear: true});
-				});
+				col.findOne({user_name: name}, function(err, doc){
+					console.log('found user to update');
+					if(err){ throw err; }
+					if(doc){
+						col.findOne({user_name: name, chat_message: {$exists: true}}, function(err, doc){
+							if(err){ throw err; }
+							if(doc){
+								console.log('user has previous messages');
+								col.update({user_name: name}, {$set: {chat_message: message, chat_message_date: date}}, function(){
+									console.log('inserted');
+									//When a client enters new data, emit the NEW message to ALL clients: send data within an array back to the clients, a single object
+									io.emit('output', [data]);
 				
+									sendStatus({message: "Message Sent", clear: true});
+								});
+							}else{
+								console.log('no previous messages');
+									col.update({user_name: name}, {$set: { chat_message: message, chat_message_date: date}}, function(){
+									console.log('inserted');
+									//When a client enters new data, emit the NEW message to ALL clients: send data within an array back to the clients, a single object
+									io.emit('output', [data]);
+				
+									sendStatus({message: "Message Sent", clear: true});
+									});
+							}
+						});
+					}else{
+						throw err;
+					}
+				});
 			}
                 });
 
