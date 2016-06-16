@@ -10,7 +10,9 @@ var session = require('express-session');
 var bodyParser = require('body-parser');
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
-app.use(session({secret: 'OSUeecs'}));
+//app.use(session({secret: 'OSUeecs', saveUninitialized: true, resave: true}));
+var sessionMiddleware = session({secret: 'OSUeecs'});
+
 
 //Load css or any js (/public)
 app.use(express.static(__dirname + '/public'));
@@ -29,6 +31,11 @@ var server = app.listen(app.get('port'), function(){
 var mongo = require('mongodb').MongoClient;
 //io === client
 var io = require('socket.io').listen(server);
+io.use(function(socket, next){
+	sessionMiddleware(socket.request, socket.request.res, next);
+});
+app.use(sessionMiddleware);
+
 
 app.get('/', function(req, res, next){
 	var context = {};
@@ -146,6 +153,11 @@ app.get('/chat', function(req, res, next){
 	if(!req.session.account_password && !req.session.account_name){
 		res.redirect('/chat/login');
 	}else{
+		/*mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
+			var col = db.collection('sessions');
+			col.insert
+		});*/
+		console.log('cookie: ' + req.session.cookie);
 		var context = {};
 		context = 'Chat';
 		var stylesheet = '<link rel="stylesheet" href="/css/chat.css">';
@@ -177,6 +189,8 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 	//io.on('connection') connects to var socket = io() within client script
         io.on('connection', function(socket){
                 console.log("a user connected");
+                console.log('please work: ' + socket.request.session.account_name);
+		//emit req.session.account_name onto list on client for display
                 //console.log(req.session.chat_name + " connected");
 		
 		//create collection called messages within dbs called chat
