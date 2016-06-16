@@ -188,8 +188,7 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
         if(err){ throw err; }
 	//io.on('connection') connects to var socket = io() within client script
         io.on('connection', function(socket){
-                console.log("a user connected");
-                console.log('please work: ' + socket.request.session.account_name);
+                console.log('user: ' + socket.request.session.account_name + ' connected');
 		//emit req.session.account_name onto list on client for display
                 //console.log(req.session.chat_name + " connected");
 		
@@ -199,6 +198,8 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 			socket.emit('status', str)
 		};
 
+		sendStatus('user ' + socket.request.session.account_name + ' connected');
+	
 		//emit all messages
 		//when client connects, retrieve all messages within chat db with limit of 100
 		//send db content to socket
@@ -242,8 +243,6 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 											io.emit('output', [doc]);
 											sendStatus({message: "Message Sent", clear: true});
 										//When a client enters new data, emit the NEW message to ALL clients: send data within an array back to the clients, a single object
-										//io.emit('output', [data]);
-										//sendStatus({message: "Message Sent", clear: true});
 										}else{
 											throw err;
 										}	
@@ -251,7 +250,7 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 								});
 							}else{
 								console.log('no previous messages');
-									col.update({user_name: name}, {$push: { chat_message: message, chat_message_date: date}}, function(){
+									col.update({user_name: name}, {$set: {chat_message: [message], chat_message_date: [date]}}, function(){
 										var col2 = db.collection('messages');
 										col2.insert({name: name, message: message, date: date});
 										col2.findOne({name: name, message: message, date: date}, function(err, doc){
