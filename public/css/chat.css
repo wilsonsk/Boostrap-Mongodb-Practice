@@ -7,6 +7,7 @@ input{
 	max-width: 300px;
 }
 
+.user-list,
 .chat-messages,
 .chat-name,
 .chat-textarea{
@@ -41,7 +42,10 @@ input{
 }
 
 .user-list{
-	color:#ff5733;
+	height: 100px;
+	width:100%;
+	background-color: #222;
+	color:#00FF00;;
 	overflow-y: scroll;
 }
 

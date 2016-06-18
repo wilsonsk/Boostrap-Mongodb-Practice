@@ -188,22 +188,31 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
         if(err){ throw err; }
 	//io.on('connection') connects to var socket = io() within client script
         io.on('connection', function(socket){
-		io.emit('userEntered', socket.request.session.account_name);
-		//emit req.session.account_name onto list on client for display
-                //console.log(req.session.chat_name + " connected");
-		
 		//create collection called messages within dbs called chat
 		var col = db.collection('users');
+		col.update({user_name: socket.request.session.account_name}, {$inc: {num_logins: 1}});
 		var sendStatus = function(str){
 			socket.emit('status', str)
 		};
 
 		sendStatus(socket.request.session.account_name + ' entered Chat');
 		var col3 = db.collection('onlineUsers');		
-		col3.insert({user: socket.request.session.account_name});
-		col3.find().toArray(function(err, res){
+		col3.find().sort({_id: 1}).toArray(function(err, doc){
 			if(err){ throw err; }
-			socket.emit('initial_user_list', res);
+			if(doc){
+				socket.emit('initial_user_list', doc);
+			}
+		});
+		//emit req.session.account_name onto list on client for display
+                //console.log(req.session.chat_name + " connected");
+		var date = new Date();
+		date = date.toDateString() + ' ' + date.toTimeString()
+		col3.insert({user: socket.request.session.account_name, date: date});
+		col3.findOne({user: socket.request.session.account_name}, function(err, doc){
+			if(err){ throw err; }
+			if(doc){
+				io.emit('userEntered', doc);
+			}
 		});
 	
 		//emit all messages
@@ -281,6 +290,13 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
                 socket.on('disconnect', function(){
                         console.log("user disconnected");
 			io.emit('userExit', socket.request.session.account_name);
+			col3.remove({user: socket.request.session.account_name});
+			col3.find().sort({_id: 1}).toArray(function(err, doc){
+				if(err){ throw err; }
+				if(doc){
+					io.emit('update_user_list', doc);
+				}
+			});
                 });
         });
 });

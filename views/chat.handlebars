@@ -51,10 +51,10 @@
 
 		var setUserList = function(user){
 			var userEntry = document.createElement('div');
-			userEntry.textContent = user;
+			userEntry.textContent = user.user + " entered Chat at " + user.date;
 			userList.appendChild(userEntry);
+			userList.insertBefore(userEntry, userList.firstChild);
 		};
-
 		try{
 			var socket = io();
 		}catch(err){
@@ -64,13 +64,23 @@
 		if(socket !== undefined){
 			console.log('ok!');
 			socket.on('userEntered', function(user){
-				setStatus(user + ' entered Chat');
+				setStatus(user.user + ' entered Chat');
 				setUserList(user);
 			});
 			socket.on('initial_user_list', function(data){
 				if(data.length){
 					for(var i = 0; i < data.length; i = i + 1){
-						setUserList(data[i].user);
+						setUserList(data[i]);
+					}
+				}
+			});
+			socket.on('update_user_list', function(data){
+				if(data.length){
+                                	for(var i = (userList.childNodes.length - 1); i < 0; i = i - 1){
+						userList.removeChild(userList.childNodes[i]);
+                                	}
+					for(var i = 0; i < data.length; i = i + 1){
+						setUserList(data[i]);
 					}
 				}
 			});
