@@ -188,7 +188,7 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
         if(err){ throw err; }
 	//io.on('connection') connects to var socket = io() within client script
         io.on('connection', function(socket){
-                console.log('user: ' + socket.request.session.account_name + ' connected');
+		io.emit('userEntered', socket.request.session.account_name);
 		//emit req.session.account_name onto list on client for display
                 //console.log(req.session.chat_name + " connected");
 		
@@ -198,7 +198,13 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 			socket.emit('status', str)
 		};
 
-		sendStatus('user ' + socket.request.session.account_name + ' connected');
+		sendStatus(socket.request.session.account_name + ' entered Chat');
+		var col3 = db.collection('onlineUsers');		
+		col3.insert({user: socket.request.session.account_name});
+		col3.find().toArray(function(err, res){
+			if(err){ throw err; }
+			socket.emit('initial_user_list', res);
+		});
 	
 		//emit all messages
 		//when client connects, retrieve all messages within chat db with limit of 100
@@ -209,7 +215,7 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 		var col2 = db.collection('messages');
 		col2.find().limit(100).sort({_id: 1}).toArray(function(err, res){
 			if(err) { throw err; }
-			//to prevent all clients from getting re emitted data when a new user connects: emit only db content to the new user
+			//to prevent all clients from getting re emitted data when a new user connects: socket.emit only db content to the new user instead of io.emit
 			socket.emit('output', res);
 		});
 
@@ -274,6 +280,7 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 
                 socket.on('disconnect', function(){
                         console.log("user disconnected");
+			io.emit('userExit', socket.request.session.account_name);
                 });
         });
 });

@@ -21,6 +21,7 @@ input{
 }
 
 .chat-name{
+	font: 18px "Tahoma", sans-serif;
 	width: 100%;
 	padding: 10px;
 	border-bottom: 0;
@@ -36,7 +37,12 @@ input{
 }
 
 .chat-status{
-	color:#bbb;
+	color:#ff5733;
+}
+
+.user-list{
+	color:#ff5733;
+	overflow-y: scroll;
 }
 
 .chat-textarea,

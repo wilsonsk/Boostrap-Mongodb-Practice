@@ -1,12 +1,14 @@
-<div class="jumbotron container-fluid">
+<div class="col-md-3"></div>
+<div class="jumbotron container-fluid col-md-6">
 	<a href="#">Messages <span class="badge" id="numMessages"></span></a>
 	<p></p>
 	<div class="chat-body">
-		<div class="col-md-4"></div>
 		<p><input type="text" disabled="disabled" class="chat-name" value="{{session_name}}"></p>
 		<p><div class="chat-messages"></div></p>
-	<p><textarea class="chat-textarea" placeholder="Type your message"></textarea></p>
-	<p><div class="chat-status">Status: <span>Idle</span></div></p>
+		<p><textarea class="chat-textarea" placeholder="Type your message"></textarea></p>
+		<p><div class="chat-status">Status: <span>Idle</span></div></p>
+		<p><div class="user-list-head">Online Now: <span class="badge" id="numUsers"></span></div></p>
+		<p><div class="user-list"></div></p>
 	</div>
 </div>	
 <script src="/socket.io/socket.io.js"></script>
@@ -26,6 +28,7 @@
 		console.log('chat name: ' + chatName.value);
 		//node of .chat-status then get span within that node
 		var status = getNode('.chat-status span');
+		var userList = getNode('.user-list');
 		var numMessages = getNode('#numMessages');
 
 		//node.textContent returns the text content of a node and its decendents
@@ -46,6 +49,12 @@
 			}
 		};
 
+		var setUserList = function(user){
+			var userEntry = document.createElement('div');
+			userEntry.textContent = user;
+			userList.appendChild(userEntry);
+		};
+
 		try{
 			var socket = io();
 		}catch(err){
@@ -54,11 +63,20 @@
 		
 		if(socket !== undefined){
 			console.log('ok!');
-			//Display new user name
 			socket.on('userEntered', function(user){
-				console.log('user: ' + user + ' entered');
+				setStatus(user + ' entered Chat');
+				setUserList(user);
 			});
-			
+			socket.on('initial_user_list', function(data){
+				if(data.length){
+					for(var i = 0; i < data.length; i = i + 1){
+						setUserList(data[i].user);
+					}
+				}
+			});
+			socket.on('userExit', function(user){
+				setStatus(user + ' exited Chat');
+			});
 			//listen for 'output' from new user
 			//new users get emitted the whole sorted array of db objects while previous clients are not re-emitted that data when first entering the site
 			//when a user sends a NEW message, all clients are emitted the message
@@ -80,7 +98,7 @@
 						//append message to chat-messages Node aka chatMessages div which encapsulates all nodes
 						chatMessages.appendChild(message);
 						//insert new message before last message: sort in reverse order: 
-							//most recent message is at the top do to the last->first sorting of the db content array within the server
+							//most recent message is at the top due to the last->first sorting of the db content array within the server
 						chatMessages.insertBefore(message, chatMessages.firstChild);
 					}
 					numMessages.textContent = +numMessages.textContent + +data.length;
