@@ -37,6 +37,7 @@ input{
 	max-width: 100%;
 }
 
+#logger,
 .chat-status{
 	color:#ff5733;
 }

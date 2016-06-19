@@ -20,6 +20,7 @@ app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 
 app.set('port', 3000);
+//app.set('port', 443);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -188,6 +189,9 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
         if(err){ throw err; }
 	//io.on('connection') connects to var socket = io() within client script
         io.on('connection', function(socket){
+		socket.on('streamIn', function(image){
+			socket.broadcast.emit('streamOut', image);
+		});
 		//create collection called messages within dbs called chat
 		var col = db.collection('users');
 		col.update({user_name: socket.request.session.account_name}, {$inc: {num_logins: 1}});
@@ -205,13 +209,13 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 		col3.findOne({user: socket.request.session.account_name}, function(err, doc){
 			if(err){ throw err; }
 			if(doc !== null){
-				io.emit('userEntered', doc);
+				socket.broadcast.emit('userEntered', doc);
 				console.log('all clients list ' + [doc]);
 			}
 		});
 		col3.find({user: {$ne: socket.request.session.account_name}}).sort({_id: 1}).toArray(function(err, doc){
 			if(err){ throw err; }
-			if(doc){
+			if(doc !== null){
 				socket.emit('initial_user_list', doc);
 				console.log('inital list: ' + doc);
 			}
@@ -295,7 +299,7 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 			col3.find().sort({_id: 1}).toArray(function(err, doc){
 				if(err){ throw err; }
 				if(doc){
-					io.emit('update_user_list', [doc]);
+					socket.broadcast.emit('update_user_list', [doc]);
 					console.log(doc);
 				}
 			});

@@ -1,16 +1,27 @@
-<div class="col-md-3"></div>
-<div class="jumbotron container-fluid col-md-6">
-	<a href="#">Messages <span class="badge" id="numMessages"></span></a>
-	<p></p>
-	<div class="chat-body">
-		<p><input type="text" disabled="disabled" class="chat-name" value="{{session_name}}"></p>
-		<p><div class="chat-messages"></div></p>
-		<p><textarea class="chat-textarea" placeholder="Type your message"></textarea></p>
-		<p><div class="chat-status">Status: <span>Idle</span></div></p>
-		<p><div class="user-list-head">Online Now: <span class="badge" id="numUsers"></span></div></p>
-		<p><div class="user-list"></div></p>
+<div class="jumbotron container-fluid row">
+	<div class="col-md-6">
+		<a href="#">Messages <span class="badge" id="numMessages"></span></a>
+		<p></p>
+		<div class="chat-body">
+			<p><input type="text" disabled="disabled" class="chat-name" value="{{session_name}}"></p>
+			<p><div class="chat-messages"></div></p>
+			<p><textarea class="chat-textarea" placeholder="Type your message"></textarea></p>
+			<p><div class="chat-status">Status: <span>Idle</span></div></p>
+			<p><div class="user-list-head">Online Now: <span class="badge" id="numUsers"></span></div></p>
+			<p><div class="user-list"></div></p>
+		</div>
+	</div>	
+	<div class="col-md-6">
+		<div class="video-body">
+			<p><div id="logger">Video Stream Status: <span>Idle</span></div></p>
+			<div class="row">
+				<video src="" id="video" style="width:400px; height:400px;" autoplay="true"></video>
+				<canvas style="display:none;" id="preview"></canvas>
+				<img id="videoStream">
+			</div>
+		</div>
 	</div>
-</div>	
+</div>
 <script src="/socket.io/socket.io.js"></script>
 <script>
 	//var socket = io();
@@ -30,6 +41,17 @@
 		var status = getNode('.chat-status span');
 		var userList = getNode('.user-list');
 		var numMessages = getNode('#numMessages');
+/* VIDEO STREAM VARS */
+		var canvas = getNode('#preview');
+			//var canvas = document.getElementById("preview");
+			var context = canvas.getContext("2d");	
+			
+			canvas.width = 400;
+			canvas.height = 400;
+
+			context.width = canvas.width;
+			context.height = canvas.height;			
+		var streamingImg = getNode('#videoStream');
 
 		//node.textContent returns the text content of a node and its decendents
 		//statusDefault === 'idle' 
@@ -75,6 +97,44 @@
 		
 		if(socket !== undefined){
 			console.log('ok!');
+/* VIDEO STREAM SCRIPTS */
+			function logger(msg){
+				$('#logger span').text(msg);
+			};
+			function loadCam(stream){
+				video.src = window.URL.createObjectURL(stream);
+				logger('Camera connected [OK]');
+			};
+			function loadCamFail(){
+				logger('Camera not connected, please retry camera');
+			};
+			function viewVideo(video, context){
+				context.drawImage(video, 0, 0, context.width, context.height);
+				socket.emit('streamIn', canvas.toDataURL('image/webp'));
+			};
+			$(document).ready(function(){
+				//PROMPT USER FOR WEBCAM ACCESS
+				navigator.mediaDevices.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mediaDevices.getUserMedia || navigator.msgGetUserMedia);
+				if(navigator.mediaDevices.getUserMedia){
+					var promise = navigator.mediaDevices.getUserMedia({video : true});
+					console.log(promise);
+					promise.then(function(stream){
+						loadCam(stream);
+					});
+					promise.catch(function(err){
+						loadCamFail();
+					});
+					setInterval(function(){
+						viewVideo(video, context);
+					}, 500);
+				}
+			});
+			socket.on('streamOut', function(image){
+				streamingImg.src = image;
+				console.log('GOT HERE');					
+			});
+			
+/* CHAT SCRIPTS */
 			socket.on('initial_user_list', function(data){
 				if(data.length){
 					for(var i = 0; i < data.length; i = i + 1){
@@ -92,7 +152,7 @@
 						userList.removeChild(userList.childNodes[i]);
                                 	}
 					for(var i = 0; i < data.length; i = i + 1){
-						setUserList(data[i]);
+						setUserList3(data[i]);
 					}
 				}
 			});
