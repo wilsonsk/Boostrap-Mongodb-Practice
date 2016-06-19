@@ -194,7 +194,23 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 		});
 		//create collection called messages within dbs called chat
 		var col = db.collection('users');
-		col.update({user_name: socket.request.session.account_name}, {$inc: {num_logins: 1}});
+		var date = new Date();
+		date = date.toDateString() + ' ' + date.toTimeString();
+		col.findOne({user_name: socket.request.session.account_name}, function(err, doc){
+			if(err) { throw err; }
+			if(doc){
+				col.findOne({user_name: socket.request.session.account_name, login_date: {$exists: true}}, function(err, doc){
+					if(err){ throw err; }
+					if(doc){
+						console.log('found prev login date');
+						col.update({user_name: socket.request.session.account_name}, {$inc: {num_logins: 1}, $push: {login_date: date}});
+					}else{
+						console.log('no prev login date');
+						col.update({user_name: socket.request.session.account_name}, {$inc: {num_logins: 1}, $set: {login_date: [date]}});
+					}	
+				});
+			}
+		});
 		var sendStatus = function(str){
 			socket.emit('status', str)
 		};
