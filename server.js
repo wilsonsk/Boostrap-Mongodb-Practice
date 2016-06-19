@@ -197,24 +197,25 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 
 		sendStatus(socket.request.session.account_name + ' entered Chat');
 		var col3 = db.collection('onlineUsers');		
-		col3.find().sort({_id: 1}).toArray(function(err, doc){
-			if(err){ throw err; }
-			if(doc){
-				socket.emit('initial_user_list', doc);
-			}
-		});
 		//emit req.session.account_name onto list on client for display
                 //console.log(req.session.chat_name + " connected");
 		var date = new Date();
-		date = date.toDateString() + ' ' + date.toTimeString()
+		date = date.toDateString() + ' ' + date.toTimeString();
 		col3.insert({user: socket.request.session.account_name, date: date});
 		col3.findOne({user: socket.request.session.account_name}, function(err, doc){
 			if(err){ throw err; }
-			if(doc){
+			if(doc !== null){
 				io.emit('userEntered', doc);
+				console.log('all clients list ' + [doc]);
 			}
 		});
-	
+		col3.find({user: {$ne: socket.request.session.account_name}}).sort({_id: 1}).toArray(function(err, doc){
+			if(err){ throw err; }
+			if(doc){
+				socket.emit('initial_user_list', doc);
+				console.log('inital list: ' + doc);
+			}
+		});
 		//emit all messages
 		//when client connects, retrieve all messages within chat db with limit of 100
 		//send db content to socket
@@ -294,7 +295,8 @@ mongo.connect('mongodb://127.0.0.1/accounts', function(err, db){
 			col3.find().sort({_id: 1}).toArray(function(err, doc){
 				if(err){ throw err; }
 				if(doc){
-					io.emit('update_user_list', doc);
+					io.emit('update_user_list', [doc]);
+					console.log(doc);
 				}
 			});
                 });

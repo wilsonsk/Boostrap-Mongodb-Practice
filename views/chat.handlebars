@@ -49,9 +49,21 @@
 			}
 		};
 
-		var setUserList = function(user){
+		var setUserList1 = function(user){
 			var userEntry = document.createElement('div');
-			userEntry.textContent = user.user + " entered Chat at " + user.date;
+			userEntry.textContent = 'inital list ' + user.user + " entered Chat at " + user.date;
+			userList.appendChild(userEntry);
+			userList.insertBefore(userEntry, userList.firstChild);
+		};
+		var setUserList2 = function(user){
+			var userEntry = document.createElement('div');
+			userEntry.textContent = 'userEntered: ' + user.user + " entered Chat at " + user.date;
+			userList.appendChild(userEntry);
+			userList.insertBefore(userEntry, userList.firstChild);
+		};
+		var setUserList3 = function(user){
+			var userEntry = document.createElement('div');
+			userEntry.textContent = 'update List: ' + user.user + " entered Chat at " + user.date;
 			userList.appendChild(userEntry);
 			userList.insertBefore(userEntry, userList.firstChild);
 		};
@@ -63,16 +75,16 @@
 		
 		if(socket !== undefined){
 			console.log('ok!');
-			socket.on('userEntered', function(user){
-				setStatus(user.user + ' entered Chat');
-				setUserList(user);
-			});
 			socket.on('initial_user_list', function(data){
 				if(data.length){
 					for(var i = 0; i < data.length; i = i + 1){
-						setUserList(data[i]);
+						setUserList1(data[i]);
 					}
 				}
+			});
+			socket.on('userEntered', function(user){
+				setStatus(user.user + ' entered Chat');
+				setUserList2(user);
 			});
 			socket.on('update_user_list', function(data){
 				if(data.length){
