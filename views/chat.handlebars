@@ -15,9 +15,10 @@
 		<div class="video-body">
 			<p><div id="logger">Video Stream Status: <span>Idle</span></div></p>
 			<div class="row">
-				<video src="" id="video" style="width:400px; height:400px;" autoplay="true"></video>
+				<div><video src="" id="video" style="width:400px; height:400px;" autoplay="true"></video></div>
 				<canvas style="display:none;" id="preview"></canvas>
-				<img id="videoStream">
+				<div><img id="videoStream"></div>
+				<!-- <div id="streamInfo">Stream Info: <span></span></div -->>
 			</div>
 		</div>
 	</div>
@@ -52,7 +53,7 @@
 			context.width = canvas.width;
 			context.height = canvas.height;			
 		var streamingImg = getNode('#videoStream');
-
+		var streamInfo = getNode('#streamInfo');
 		//node.textContent returns the text content of a node and its decendents
 		//statusDefault === 'idle' 
 		var statusDefault = status.textContent;			
@@ -101,12 +102,15 @@
 			function logger(msg){
 				$('#logger span').text(msg);
 			};
+			function logStreamInfo(msg){
+				$('#streamInfo span').text(msg);
+			};
 			function loadCam(stream){
 				video.src = window.URL.createObjectURL(stream);
 				logger('Camera connected [OK]');
 			};
 			function loadCamFail(){
-				logger('Camera not connected, please retry camera');
+				logger('Camera not connected, please turn on camera');
 			};
 			function viewVideo(video, context){
 				context.drawImage(video, 0, 0, context.width, context.height);
@@ -131,7 +135,7 @@
 			});
 			socket.on('streamOut', function(image){
 				streamingImg.src = image;
-				console.log('GOT HERE');					
+				logStreamInfo(image);
 			});
 			
 /* CHAT SCRIPTS */
